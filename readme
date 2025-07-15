@@ -1,0 +1,27 @@
+https://mermaid.live/
+
+####################
+Multi-Agent
+############
+
+python -m pip install virtualenv
+python.exe -m pip install --upgrade pip
+
+python -m virtualenv multiagent
+
+.\multiagent\Scripts\activate
+
+python -m agents.orchestrator
+python -m agents.researcher.research
+
+
+python -m pip install -r .\requirements.txt
+
+############
+Execute test
+#########
+
+pytest . -s -v
+
+###############
+

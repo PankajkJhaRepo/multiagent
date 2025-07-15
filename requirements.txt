@@ -1,0 +1,17 @@
+python-dotenv
+langchain
+langchain_core
+langgraph
+
+langchainhub
+langchain-community
+
+langchain_openai
+langchain-tavily
+langchain_postgres
+langgraph-checkpoint-postgres
+
+beautifulsoup4
+
+pytest
+pytest-asyncio

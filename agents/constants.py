@@ -1,0 +1,6 @@
+INITIAL_RESEARCH = "initial-research"
+HALLUCINATION_GRADER ="hallucination_grader"
+RESEARCH_REVIEWER="research-reviewer"
+RESPONSE_GRADER="response_grader"
+HUMAN_FEEDBACK = "human_feedback"
+INITIAL_PLAN="initial-plan"

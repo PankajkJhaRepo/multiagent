@@ -1,0 +1,7 @@
+PLAN="plan"
+RESEARCH = "research"
+HALLUCINATION_GRADER ="hallucination_grader"
+RESEARCH_REVIEWER="research-reviewer"
+RESPONSE_GRADER="response_grader"
+HUMAN_FEEDBACK = "human_feedback"
+RETURN_BACK = "return_back"
