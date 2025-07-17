@@ -13,6 +13,6 @@ class ResearchReviewerAgent:
         # Implementation of research review logic
         print("Running research review...")
         return{
-            "research_reviewer_score": True
+            "revise_research": False
         }
         

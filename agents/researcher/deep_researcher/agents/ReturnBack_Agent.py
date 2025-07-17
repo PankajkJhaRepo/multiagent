@@ -17,6 +17,7 @@ class ReturnBack_Agent:
         """
         print("Returning back research...")  
         research_result = state.get("research_result")
+        print(f"Returning back with research result: {research_result}")
         return {
             "research_result": research_result,
         }

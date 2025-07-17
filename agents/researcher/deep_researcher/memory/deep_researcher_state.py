@@ -12,6 +12,6 @@ class ResearchState(TypedDict):
     research_state: str
     human_feedback: str
     research_result: RelatedTopics  # Changed from dict[str, Any] to RelatedTopics
-    hallucination_score: bool
-    research_reviewer_score: bool
+    is_hallucinationed: bool
+    revise_research: bool
     response_grader_score: bool

@@ -48,25 +48,53 @@ def parse_agent_response(response):
     output_text = response.get("output", "")
     
     try:
-        # Try to extract JSON from the response
-        json_match = re.search(r'```json\s*(\{.*?\})\s*```', output_text, re.DOTALL)
-        if json_match:
-            json_str = json_match.group(1)
-        else:
-            # If no code block, try to find JSON in the text
-            json_match = re.search(r'\{.*?\}', output_text, re.DOTALL)
+        # First, try to extract JSON from markdown code blocks
+        json_patterns = [
+            r'```json\s*(\{.*?\})\s*```',  # JSON in code blocks
+            r'```\s*(\{.*?\})\s*```',      # JSON in plain code blocks
+            r'(\{[^{}]*"topics"[^{}]*\[[^\]]*\][^{}]*\})',  # Direct JSON with topics array
+            r'\{.*?\}',                     # Any JSON-like structure
+        ]
+        
+        json_str = None
+        for pattern in json_patterns:
+            json_match = re.search(pattern, output_text, re.DOTALL)
             if json_match:
-                json_str = json_match.group(0)
-            else:
-                # Fallback: create a basic structure
-                return RelatedTopics(topics=[])
+                json_str = json_match.group(1)
+                break
+        
+        if not json_str:
+            print(f"No JSON found in response: {output_text[:200]}...")
+            return RelatedTopics(topics=[])
+        
+        # Clean up the JSON string
+        json_str = json_str.strip()
+        
+        # Handle common JSON formatting issues
+        json_str = re.sub(r',\s*}', '}', json_str)  # Remove trailing commas
+        json_str = re.sub(r',\s*]', ']', json_str)  # Remove trailing commas in arrays
         
         # Parse JSON and create RelatedTopics object
         parsed_data = json.loads(json_str)
-        return RelatedTopics(**parsed_data)
         
-    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        # Validate the structure
+        if "topics" not in parsed_data:
+            print("No 'topics' key found in parsed data")
+            return RelatedTopics(topics=[])
+        
+        # Ensure each topic has required fields
+        valid_topics = []
+        for topic in parsed_data["topics"]:
+            if isinstance(topic, dict) and all(key in topic for key in ["topic", "description", "source"]):
+                valid_topics.append(Topic(**topic))
+            else:
+                print(f"Invalid topic format: {topic}")
+        
+        return RelatedTopics(topics=valid_topics)
+        
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
         print(f"Error parsing agent response: {e}")
+        print(f"Response content: {output_text[:500]}...")
         # Return empty RelatedTopics on error
         return RelatedTopics(topics=[])
 
@@ -143,7 +171,14 @@ agent = create_react_agent(
     tools=tools_for_agent,
     prompt=react_prompt)
 
-agent_executor = AgentExecutor(agent=agent,tools=tools_for_agent, verbose=True)
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools_for_agent, 
+    verbose=True,
+    handle_parsing_errors=True,
+    max_iterations=3,
+    early_stopping_method="generate"
+)
 
 # Create the research chain
 research_chain = (

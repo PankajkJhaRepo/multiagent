@@ -36,22 +36,21 @@ class ResearchAgent:
                     "topic": topic_obj,
                     "history": existing_topic_details
                 })
-                return {
-                    "query": query,
-                    "research_result": response,
-                    "research_state": "DeepResearch",
-                }
             else:
                 print("No previous research found, proceeding without history")
                 response = research_chain.invoke({
                     "query": query,
                     "topic": topic_obj,
                 })
-                return {
-                    "query": query,
-                    "research_result": response,
-                    "research_state": "DeepResearch",
-                }
+            
+            # Merge the new response with existing research_result
+            merged_research_result = self._merge_research_results(research_result, response)
+            
+            return {
+                "query": query,
+                "research_result": merged_research_result,
+                "research_state": "DeepResearch",
+            }
         except Exception as e:
             print(f"Error during research chain execution: {e}")
             # Return a minimal response to allow the system to continue
@@ -95,4 +94,48 @@ class ResearchAgent:
         print(f"No match found for topic: {target_topic_name}")
         return None
 
+    def _merge_research_results(self, existing_research_result, new_response):
+        """
+        Merge new research response with existing research_result by appending topics.
         
+        Args:
+            existing_research_result: RelatedTopics object with existing topics (can be None)
+            new_response: RelatedTopics object from research_chain
+            
+        Returns:
+            RelatedTopics object with merged topics
+        """
+        from agents.researcher.memory.research_topics import RelatedTopics, Topic
+        
+        # Initialize lists for merging
+        existing_topics = []
+        new_topics = []
+        
+        # Extract existing topics if available
+        if existing_research_result and hasattr(existing_research_result, 'topics'):
+            existing_topics = existing_research_result.topics or []
+            print(f"Found {len(existing_topics)} existing topics")
+        
+        # Extract new topics from response
+        if new_response and hasattr(new_response, 'topics'):
+            new_topics = new_response.topics or []
+            print(f"Found {len(new_topics)} new topics from research")
+        
+        # Merge topics, avoiding duplicates based on topic name
+        merged_topics = list(existing_topics)  # Start with existing topics
+        existing_topic_names = {topic.topic.lower().strip() for topic in existing_topics}
+        
+        for new_topic in new_topics:
+            # Check for duplicates (case-insensitive)
+            if new_topic.topic.lower().strip() not in existing_topic_names:
+                merged_topics.append(new_topic)
+                existing_topic_names.add(new_topic.topic.lower().strip())
+                print(f"Added new topic: {new_topic.topic}")
+            else:
+                print(f"Skipped duplicate topic: {new_topic.topic}")
+        
+        print(f"Merged research result contains {len(merged_topics)} total topics")
+        
+        # Return new RelatedTopics object with merged topics
+        return RelatedTopics(topics=merged_topics)
+

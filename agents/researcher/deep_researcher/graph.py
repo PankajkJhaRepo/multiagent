@@ -30,8 +30,8 @@ def _create_workflow(agents):
     workflow.add_node(RESEARCH, agents[RESEARCH].run_research)
     workflow.add_node(HALLUCINATION_GRADER, agents[HALLUCINATION_GRADER].verify_hallucinations)
     workflow.add_node(RESEARCH_REVIEWER, agents[RESEARCH_REVIEWER].review_research)
-    workflow.add_node(RESPONSE_GRADER, agents[RESPONSE_GRADER].grade_response)
-    workflow.add_node(HUMAN_FEEDBACK, agents[HUMAN_FEEDBACK].review_feedback)
+    # workflow.add_node(RESPONSE_GRADER, agents[RESPONSE_GRADER].grade_response)
+    # workflow.add_node(HUMAN_FEEDBACK, agents[HUMAN_FEEDBACK].review_feedback)
     workflow.add_node(RETURN_BACK, agents[RETURN_BACK].invoke)
 
     # Add edges
@@ -46,43 +46,54 @@ def _add_workflow_edges(workflow):
     workflow.add_edge(PLAN, RESEARCH)
     workflow.add_edge(RESEARCH, HALLUCINATION_GRADER)
     
-    # workflow.add_edge(HALLUCINATION_GRADER, RESEARCH_REVIEWER)
+
     workflow.add_conditional_edges(
         HALLUCINATION_GRADER,
-        lambda state: "continue" if state.get("hallucination_score") else "revise",
+        lambda state: "revise" if state.get("is_hallucinationed") else "continue",
         {
             "continue": RESEARCH_REVIEWER,
             "revise": RESEARCH
         }
     )
 
+    ## todo
     workflow.add_conditional_edges(
         RESEARCH_REVIEWER,
-        lambda state: "continue" if state.get("research_reviewer_score") else "revise",
+        lambda state: "revise" if state.get("revise_research") else "continue",
         {
-            "continue": RESPONSE_GRADER,
+            "continue": RETURN_BACK,
             "revise": RESEARCH
         }
     )
 
-    workflow.add_conditional_edges(
-        RESPONSE_GRADER,
-        lambda state: "continue" if state.get("response_grader_score") else "revise",
-        {
-            "continue": HUMAN_FEEDBACK,
-            "revise": RESEARCH
-        }
-    )
 
-    # Add human in the loop
-    workflow.add_conditional_edges(
-            HUMAN_FEEDBACK,
-            _decide_next_step,  # Decision function
-            {
-                "accept": RETURN_BACK,
-                "revise": RESEARCH
-            }
-        )
+    # workflow.add_conditional_edges(
+    #     RESEARCH_REVIEWER,
+    #     lambda state: "revise" if state.get("revise_research") else "continue",
+    #     {
+    #         "continue": RESPONSE_GRADER,
+    #         "revise": RESEARCH
+    #     }
+    # )
+
+    # workflow.add_conditional_edges(
+    #     RESPONSE_GRADER,
+    #     lambda state: "continue" if state.get("response_grader_score") else "revise",
+    #     {
+    #         "continue": HUMAN_FEEDBACK,
+    #         "revise": RESEARCH
+    #     }
+    # )
+
+    # # Add human in the loop
+    # workflow.add_conditional_edges(
+    #         HUMAN_FEEDBACK,
+    #         _decide_next_step,  # Decision function
+    #         {
+    #             "accept": RETURN_BACK,
+    #             "revise": RESEARCH
+    #         }
+    #     )
     workflow.add_edge(RETURN_BACK, END)
 
 def _decide_next_step(state: ResearchState) -> str:

@@ -12,6 +12,7 @@ langchain_postgres
 langgraph-checkpoint-postgres
 
 beautifulsoup4
+tiktoken
 
 pytest
 pytest-asyncio

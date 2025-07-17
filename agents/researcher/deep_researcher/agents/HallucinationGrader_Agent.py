@@ -23,5 +23,5 @@ class HallucinationGraderAgent:
         #     print("Hallucinations detected, revision needed.")
         #     return "revise"
         return{
-            "hallucination_score": True
+            "is_hallucinationed": False
         }
