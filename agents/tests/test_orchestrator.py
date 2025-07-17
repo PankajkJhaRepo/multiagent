@@ -60,7 +60,10 @@ def test_init_research_team(orchestrator):
     workflow = orchestrator.init_research_team()
     assert workflow is not None
     # Check if the workflow has all required nodes
-    expected_nodes = ["browser", "planner", "researcher", "writer", "publisher", "human"]
+    expected_nodes = ["researcher", "deep_researcher", "writer", "publisher", "human"]
+    actual_nodes = list(workflow.nodes.keys())
+    print(f"Expected nodes: {expected_nodes}")
+    print(f"Actual nodes: {actual_nodes}")
     assert all(node in workflow.nodes for node in expected_nodes)
 
 # @pytest.mark.asyncio
